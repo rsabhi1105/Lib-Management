@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:15
+    container_name: libra-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - /db/management:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  web:
+    build: .
+    container_name: libra-web
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DJANGO_DB_NAME: postgres
+      DJANGO_DB_USER: postgres
+      DJANGO_DB_PASSWORD: postgres
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: 5432
+
+  redis:
+    image: redis
+    container_name: libra-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /redis:/usr/local/etc/redis/redis.conf
+  celery:
+    build: .
+    container_name: libra-celery
+    command: celery -A management worker --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+      - web
+    environment:
+      DJANGO_DB_NAME: postgres
+      DJANGO_DB_USER: postgres
+      DJANGO_DB_PASSWORD: postgres
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: 5432
+
+volumes:
+  postgres_data:
