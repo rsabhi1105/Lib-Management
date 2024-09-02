@@ -1,4 +1,1 @@
-from library.models import Book
-
-book_name = Book.objects.first().title
-print(book_name)
+### this all for dev branch testing purpose
